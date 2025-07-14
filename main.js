@@ -151,20 +151,20 @@ function generateChessboardSvg(rows, columns, squareSize) {
     return svg;
 }
 
-function generateCharucoBoard(rows, columns, squareSize, dictName, markerSize, startId = 0, legacy=false) {
+function generateCharucoBoard(rows, columns, squareSize, dictName, markerSize, startId = 0, legacy = false) {
     markerSizemm = squareSize - Math.floor((squareSize - 1) / 4) - 1;
     markerSizeSvg = markerSizemm / squareSize;
-    width = columns * squareSize;
-    height = rows * squareSize;
+    width = columns * squareSize + 10;
+    height = rows * squareSize + 10;
 
     export_data.width_mm = width;
     export_data.height_mm = height;
     export_data.filename = 'charuco_' + columns + 'x' + rows + '_' + squareSize + 'mm_' + markerSizemm + 'mm_' + OPENCV_DICTS[dictName];
-    export_data.info = 'Dictionary: ' + OPENCV_DICTS[dictName] + 
-                    ' Square size: ' + squareSize + 'mm' +
-                    ' Marker size: ' + markerSizemm + 'mm' +
-                    ' size: ' + columns + 'x' + rows +
-                    ' start id: ' + startId;
+    export_data.info = 'Dictionary: ' + OPENCV_DICTS[dictName] +
+        ' Square size: ' + squareSize + 'mm' +
+        ' Marker size: ' + markerSizemm + 'mm' +
+        ' size: ' + columns + 'x' + rows +
+        ' start id: ' + startId;
 
 
     var svg = document.createElement('svg');
@@ -183,8 +183,8 @@ function generateCharucoBoard(rows, columns, squareSize, dictName, markerSize, s
 
     for (var i = 0; i < rows; i++) {
         for (var j = 0; j < columns; j++) {
-            x = j * squareSize;
-            y = i * squareSize;
+            x = j * squareSize + 5;
+            y = i * squareSize + 5;
             l = 1
             if (legacy) {
                 l = 0;
@@ -197,6 +197,42 @@ function generateCharucoBoard(rows, columns, squareSize, dictName, markerSize, s
                 rect.setAttribute('height', squareSize);
                 rect.setAttribute('fill', 'black');
                 svg.appendChild(rect);
+
+                // Add arrow and number to second row and second column (i==1, j==1)
+                if (i === 1 && j === 1) {
+                    // Arrow pointing up (SVG path)
+                    var arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    // Arrow centered in the square
+                    var arrowWidth = squareSize * 0.1;
+                    var arrowHeight = squareSize * 0.1;
+                    var arrowX = x + squareSize / 2 - 0.8;
+                    var numberX = x + squareSize / 2 + 0.8;
+                    var arrowY = y + squareSize / 2;
+                    // Simple up arrow path
+                    arrow.setAttribute('d',
+                        `M ${arrowX} ${arrowY + arrowHeight / 2} 
+                        L ${arrowX} ${arrowY - arrowHeight / 2} 
+                        M ${arrowX} ${arrowY - arrowHeight / 2} 
+                        L ${arrowX - arrowWidth / 2} ${arrowY} 
+                        M ${arrowX} ${arrowY - arrowHeight / 2} 
+                        L ${arrowX + arrowWidth / 2} ${arrowY}`
+                    );
+                    arrow.setAttribute('stroke', 'white');
+                    arrow.setAttribute('stroke-width', squareSize * 0.01);
+                    arrow.setAttribute('fill', 'none');
+                    svg.appendChild(arrow);
+
+                    // Number "0" below the arrow
+                    var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute('x', numberX);
+                    text.setAttribute('y', arrowY + arrowHeight * 0.34);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('dominant-baseline', 'middle');
+                    text.setAttribute('fill', 'white');
+                    text.setAttribute('font-size', squareSize * 0.1);
+                    text.textContent = '2';
+                    svg.appendChild(text);
+                }
             }
             else {
                 bits = arucoMatrix(markerSize, markerSize, dictName, startId++);
@@ -325,10 +361,10 @@ function export_pdf() {
         once: (...args) => { },
         emit: (...args) => { },
     });
-    
+
     window.SVGtoPDF(doc, svg, margin_points, margin_points)
     doc.fontSize(6);
-    doc.text(export_data.info, margin_points, margin_points/3);
+    doc.text(export_data.info, margin_points, margin_points / 3);
 
     doc.end();
 }
@@ -372,7 +408,7 @@ function init() {
         }
     }
 
-    update_form_status = function (spacing_visible, label_size_text, rows_and_cols_visible, start_id_visible, dict_visible, marker_id_text='Marker Id:', size = 20) {
+    update_form_status = function (spacing_visible, label_size_text, rows_and_cols_visible, start_id_visible, dict_visible, marker_id_text = 'Marker Id:', size = 20) {
         form_spacing.hidden = !spacing_visible;
         form_label_size.innerText = label_size_text;
         form_rows.hidden = !rows_and_cols_visible;
@@ -397,10 +433,10 @@ function init() {
             update_form_status(false, 'Marker size (mm):', false, true, true);
         } else if (pattern == 'charuco') {
             svgFunGeneration = () => generateCharucoBoard(rows, columns, size, dictName, marker_size, markerId);
-            update_form_status(false, 'Square size (mm):', true, true, true, marker_id_text='Marker Id start:');
+            update_form_status(false, 'Square size (mm):', true, true, true, marker_id_text = 'Marker Id start:');
         } else if (pattern == 'charuco_legacy') {
             svgFunGeneration = () => generateCharucoBoard(rows, columns, size, dictName, marker_size, markerId, true);
-            update_form_status(false, 'Square size (mm):', true, true, true, marker_id_text='Marker Id start:');
+            update_form_status(false, 'Square size (mm):', true, true, true, marker_id_text = 'Marker Id start:');
         } else if (pattern == 'circles') {
             svgFunGeneration = () => generateCircleBoard(rows, columns, size, spacing);
             update_form_status(true, 'Circle size (mm):', true, false, false);
